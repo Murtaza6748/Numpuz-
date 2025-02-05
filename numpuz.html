@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NumPuz - Number Puzzle</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #e0f7fa; /* Light cyan background */
+        }
+        h1 {
+            margin-top: 20px;
+        }
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 80px);
+            grid-template-rows: repeat(4, 80px);
+            gap: 5px;
+            margin: 20px auto;
+            width: 340px;
+            background-color: #ddd;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .tile {
+            width: 80px;
+            height: 80px;
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .tile:hover {
+            background-color: #f1c40f; /* Yellow hover effect */
+        }
+        .empty {
+            background: none;
+            cursor: default;
+        }
+        #moves {
+            font-size: 18px;
+            margin: 10px;
+        }
+        #reset {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #reset:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>NumPuz - Number Puzzle</h1>
+    <p id="moves">Moves: 0</p>
+    <div id="game-board"></div>
+    <button id="reset">Reset Game</button>
+
+    <script>
+        const boardSize = 4;
+        let tiles = [];
+        let emptyIndex = 15;
+        let moves = 0;
+
+        function initializeBoard() {
+            tiles = [...Array(15).keys()].map(n => n + 1);
+            tiles.push(null);  // Empty tile
+            shuffleBoard();
+            renderBoard();
+        }
+
+        function shuffleBoard() {
+            do {
+                tiles.sort(() => Math.random() - 0.5);
+                emptyIndex = tiles.indexOf(null);
+            } while (!isSolvable(tiles));
+        }
+
+        function isSolvable(arr) {
+            let inversions = 0;
+            let flatArr = arr.filter(n => n !== null);
+            for (let i = 0; i < flatArr.length; i++) {
+                for (let j = i + 1; j < flatArr.length; j++) {
+                    if (flatArr[i] > flatArr[j]) inversions++;
+                }
+            }
+            let row = Math.floor(emptyIndex / boardSize);
+            return (inversions % 2 === 0) === (row % 2 !== 0);
+        }
+
+        function renderBoard() {
+            const board = document.getElementById("game-board");
+            board.innerHTML = "";
+            tiles.forEach((num, index) => {
+                let tile = document.createElement("div");
+                tile.classList.add("tile");
+                if (num === null) {
+                    tile.classList.add("empty");
+                } else {
+                    tile.innerText = num;
+                    tile.addEventListener("click", () => moveTile(index));
+                }
+                board.appendChild(tile);
+            });
+        }
+
+        function moveTile(index) {
+            const possibleMoves = [
+                emptyIndex - 1, emptyIndex + 1, // Left, Right
+                emptyIndex - boardSize, emptyIndex + boardSize // Up, Down
+            ];
+            if (possibleMoves.includes(index)) {
+                [tiles[emptyIndex], tiles[index]] = [tiles[index], tiles[emptyIndex]];
+                emptyIndex = index;
+                moves++;
+                document.getElementById("moves").innerText = `Moves: ${moves}`;
+                renderBoard();
+                checkWin();
+            }
+        }
+
+        function checkWin() {
+            if (tiles.slice(0, 15).every((num, index) => num === index + 1)) {
+                setTimeout(() => alert(`Congratulations! You solved the puzzle in ${moves} moves.`), 200);
+            }
+        }
+
+        document.getElementById("reset").addEventListener("click", () => {
+            moves = 0;
+            document.getElementById("moves").innerText = "Moves: 0";
+            initializeBoard();
+        });
+
+        initializeBoard();
+    </script>
+</body>
+</html>
